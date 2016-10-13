@@ -16,7 +16,7 @@ X = np.zeros((N*K, D)) # data matrix (each row = single example)
 y = np.zeros(N*K, dtype='uint8') # class labels
 
 
-for j in xrange(K):
+for j in range(K):
     ix = range(N*j, N*(j+1))
     r = np.linspace(0.0, 1, N) # radius
     t = np.linspace(j*4, (j+1)*4, N) + np.random.randn(N)*0.2 # theta
@@ -47,7 +47,7 @@ b = np.zeros((1, h))
 W2 = 0.01 * np.random.randn(h, K)
 b2 = np.zeros((1, K))
 
-for i in xrange(20000):
+for i in range(20000):
     # evaluate the class scores with a 2-layer Neural Network
     # ReLU activation
     hidden_layer = np.maximum(0, np.dot(X, W) + b)
@@ -69,13 +69,13 @@ for i in xrange(20000):
     loss = data_loss + reg_loss
     
     if i%1000==0:
-        print 'iteration %d: loss %f'%(i, loss)
+        print('iteration %d: loss %f'%(i, loss))
         # evaluate training set accuracy
         hidden_layer = np.maximum(0, np.dot(X, W) + b)
         scores = np.dot(hidden_layer, W2) + b2
         predicted_class = np.argmax(scores, axis=1)
         
-        print 'training accuracy: %.2f'%(np.mean(predicted_class==y))
+        print('training accuracy: %.2f'%(np.mean(predicted_class==y)))
     # compute the gradient on scores
     dscores = probs
     dscores[range(num_examples), y] -= 1
