@@ -29,7 +29,31 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  # pass
+  num_train = X.shape[0]
+  for i in xrange(num_train):
+    scores = np.dot(X[i], W)
+    # exp scores
+    exp_scores = np.exp(scores)
+    # exp prob
+    exp_prob = exp_scores / np.sum(exp_scores)
+    
+    #correct label
+    correct_logprob = -np.log(exp_prob[y[i]])
+    
+    loss += correct_logprob
+    
+    dscores = exp_prob
+    dscores[y[i]] -= 1
+    dW += np.dot(X[i][:, None], dscores[None, :])
+  
+  # normalization
+  loss /= num_train
+  dW /= num_train
+  
+  # regularization
+  loss += 0.5 * reg * np.sum(W*W)
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -53,7 +77,30 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  # pass
+  
+  num_train = X.shape[0]
+
+  scores = np.dot(X, W)
+  exp_scores = np.exp(scores)
+  exp_prob = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+  
+  correct_problog= np.log(exp_prob[range(num_train), y])
+  
+  loss = -np.sum(correct_problog)  
+  
+  dscores = exp_prob
+  dscores[range(num_train), y] -= 1
+
+  dW = np.dot(X.T, dscores)
+  
+  # normalization
+  loss /= num_train
+  dW /= num_train
+  
+  # regularization
+  loss += 0.5 * reg * np.sum(W*W)
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
