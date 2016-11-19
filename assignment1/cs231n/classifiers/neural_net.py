@@ -24,9 +24,9 @@ class TwoLayerNet(object):
     variable self.params, which is a dictionary with the following keys:
 
     W1: First layer weights; has shape (D, H)
-    b1: First layer biases; has shape (H,)
+    b1: First layer biases; has  (H,)
     W2: Second layer weights; has shape (H, C)
-    b2: Second layer biases; has shape (C,)
+    b2: Second layer biases; has shapshapee (C,)
 
     Inputs:
     - input_size: The dimension D of the input data.
