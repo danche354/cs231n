@@ -435,7 +435,27 @@ def conv_forward_naive(x, w, b, conv_param):
   # TODO: Implement the convolutional forward pass.                           #
   # Hint: you can use the function np.pad for padding.                        #
   #############################################################################
-  pass
+  # pass
+  
+  N, C, H, W = x.shape
+  F, C, HH, WW = w.shape
+  stride = conv_param['stride']
+  pad = conv_param['pad']
+  H_ = 1 + (H + 2 * pad - HH) / stride
+  W_ = 1 + (W + 2 * pad - WW) / stride
+
+  out = np.zeros((N, F, H_, W_))
+
+  x_pad = np.pad(x, ((0,), (0,), (pad,), (pad,)), mode='constant', constant_values=0)
+
+  for i in range(H_):
+    for j in range(W_):
+      x_pad_mask = x_pad[:, :, i*stride:i*stride+HH, j*stride:j*stride+WW]
+      for f in range(F):
+        out[:, f, i, j] = np.sum(x_pad_mask*w[f,:,:,:], axis=(1,2,3))
+
+  out += b[None,:,None,None]
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -460,7 +480,36 @@ def conv_backward_naive(dout, cache):
   #############################################################################
   # TODO: Implement the convolutional backward pass.                          #
   #############################################################################
-  pass
+  # pass
+
+  x, w, b, conv_param = cache
+  N, C, H, W = x.shape
+  F, C, HH, WW = w.shape
+  stride = conv_param['stride']
+  pad = conv_param['pad']
+  H_ = 1 + (H + 2 * pad - HH) / stride
+  W_ = 1 + (W + 2 * pad - WW) / stride
+
+  x_pad = np.pad(x, ((0,), (0,), (pad,), (pad,)), mode='constant', constant_values=0)
+
+  dx = np.zeros_like(x)
+  dx_pad = np.zeros_like(x_pad)
+  dw = np.zeros_like(w)
+  db = np.zeros_like(b)
+
+  db = np.sum(dout, axis=(0,2,3))
+
+  for i in range(H_):
+    for j in range(W_):
+      x_pad_mask = x_pad[:, :, i*stride:i*stride+HH, j*stride:j*stride+WW]
+      for f in range(F):
+        dw[f,:,:,:] += np.sum(x_pad_mask*(dout[:,f,i,j])[:,None,None,None],axis=0)
+      for n in range(N):
+        dx_pad[n, :, i*stride:i*stride+HH, j*stride:j*stride+WW] += \
+                            np.sum(w[:,:,:,:]*(dout[n,:,i,j])[:,None,None,None], axis=0)
+
+  dx = dx_pad[:,:,pad:-pad,pad:-pad]
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -486,7 +535,20 @@ def max_pool_forward_naive(x, pool_param):
   #############################################################################
   # TODO: Implement the max pooling forward pass                              #
   #############################################################################
-  pass
+  # pass
+
+  N, C, H, W = x.shape
+  HH, WW, stride = pool_param['pool_height'], pool_param['pool_width'], pool_param['stride']
+  H_ = 1 + (H - HH) / stride
+  W_ = 1 + (W - WW) / stride  
+
+  out = np.zeros((N, C, H_, W_))
+
+  for i in range(H_):
+    for j in range(W_):
+      x_mask = x[:,:,i*stride : i*stride+HH, j*stride : j*stride+WW]
+      out[:,:,i,j] = np.max(x_mask, axis=(2,3))
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -509,7 +571,22 @@ def max_pool_backward_naive(dout, cache):
   #############################################################################
   # TODO: Implement the max pooling backward pass                             #
   #############################################################################
-  pass
+  # pass
+
+  x, pool_param = cache
+  N, C, H, W = x.shape
+  HH, WW, stride = pool_param['pool_height'], pool_param['pool_width'], pool_param['stride']
+  H_ = 1 + (H - HH) / stride
+  W_ = 1 + (W - WW) / stride
+  dx = np.zeros_like(x)
+
+  for i in range(H_):
+    for j in range(W_):
+      x_mask = x[:,:,i*stride : i*stride+HH, j*stride : j*stride+WW]
+      max_x_mask = np.max(x_mask,axis=(2,3))
+      temp_binary_mask = (x_mask == (max_x_mask)[:,:,None,None])
+      dx[:,:,i*stride:i*stride+HH,j*stride:j*stride+WW] += temp_binary_mask*(dout[:,:,i,j])[:,:,None,None]
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -547,7 +624,12 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
   # version of batch normalization defined above. Your implementation should  #
   # be very short; ours is less than five lines.                              #
   #############################################################################
-  pass
+  # pass
+
+  N, C, H, W = x.shape
+  temp_output, cache = batchnorm_forward(x.transpose(0,3,2,1).reshape((N*H*W,C)), gamma, beta, bn_param)
+  out = temp_output.reshape(N,W,H,C).transpose(0,3,2,1)
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -577,7 +659,12 @@ def spatial_batchnorm_backward(dout, cache):
   # version of batch normalization defined above. Your implementation should  #
   # be very short; ours is less than five lines.                              #
   #############################################################################
-  pass
+  # pass
+
+  N,C,H,W = dout.shape
+  dx_temp, dgamma, dbeta = batchnorm_backward_alt(dout.transpose(0,3,2,1).reshape((N*H*W,C)),cache)
+  dx = dx_temp.reshape(N,W,H,C).transpose(0,3,2,1)
+  
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
